@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const adminController_1 = __importDefault(require("../controllers/adminController"));
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const validate_1 = __importDefault(require("../middleware/validate"));
+const commonValidators_1 = require("../validators/commonValidators");
+const adminValidators_1 = require("../validators/adminValidators");
+const router = express_1.default.Router();
+router.get('/all-evidence', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), (0, validate_1.default)(commonValidators_1.listQuerySchema, 'query'), adminController_1.default.allEvidence);
+router.get('/users', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), (0, validate_1.default)(adminValidators_1.adminUsersQuerySchema, 'query'), adminController_1.default.users);
+router.post('/users/invite', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), (0, validate_1.default)(adminValidators_1.inviteUserSchema), adminController_1.default.inviteUser);
+router.patch('/users/:userId/status', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), (0, validate_1.default)(adminValidators_1.updateUserStatusParamsSchema, 'params'), (0, validate_1.default)(adminValidators_1.updateUserStatusSchema), adminController_1.default.updateUserStatus);
+router.get('/users/export', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), (0, validate_1.default)(adminValidators_1.exportUsersQuerySchema, 'query'), adminController_1.default.exportUsers);
+router.get('/settings', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), adminController_1.default.settings);
+router.get('/project-activity-summary', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), adminController_1.default.projectActivitySummary);
+router.post('/settings/review-controls', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), (0, validate_1.default)(adminValidators_1.reviewControlsSchema), adminController_1.default.reviewControls);
+router.post('/settings/generate-report', authMiddleware_1.authenticateRequired, (0, authMiddleware_1.authorizeRoles)('admin'), (0, validate_1.default)(adminValidators_1.generateReportSchema), adminController_1.default.generateReport);
+exports.default = router;

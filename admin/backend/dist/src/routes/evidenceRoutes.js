@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const evidenceController_1 = __importDefault(require("../controllers/evidenceController"));
+const upload_1 = __importDefault(require("../middleware/upload"));
+const validate_1 = __importDefault(require("../middleware/validate"));
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const evidenceValidators_1 = require("../validators/evidenceValidators");
+const commonValidators_1 = require("../validators/commonValidators");
+const router = express_1.default.Router();
+router.post('/upload', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.uploadSchema), evidenceController_1.default.upload);
+router.post('/emergency', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.emergencySchema), evidenceController_1.default.emergency);
+router.post('/travel', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.travelSchema), evidenceController_1.default.travel);
+router.get('/user/:userId', authMiddleware_1.authenticateRequired, (0, validate_1.default)(evidenceValidators_1.userParamSchema, 'params'), (0, validate_1.default)(commonValidators_1.listQuerySchema, 'query'), evidenceController_1.default.listUserEvidence);
+router.get('/:id', authMiddleware_1.authenticateRequired, (0, validate_1.default)(evidenceValidators_1.idParamSchema, 'params'), evidenceController_1.default.getEvidence);
+router.post('/verify/:id', authMiddleware_1.authenticateRequired, (0, validate_1.default)(evidenceValidators_1.idParamSchema, 'params'), evidenceController_1.default.verifyEvidence);
+exports.default = router;
