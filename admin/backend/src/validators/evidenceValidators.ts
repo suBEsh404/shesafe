@@ -60,6 +60,15 @@ const travelCheckpointSchema = Joi.object({
   isFinal: Joi.boolean().default(false)
 });
 
+const emergencyFinalizeSchema = Joi.object({
+  caseId: Joi.string().min(1).max(120).required(),
+  sessionId: Joi.string().min(8).max(120).required(),
+  type: Joi.string().valid('emergency').default('emergency'),
+  mode: Joi.string().valid('emergency').default('emergency'),
+  isFinal: Joi.boolean().default(true),
+  metadata: Joi.object().unknown(true).default({})
+});
+
 const idParamSchema = Joi.object({
   id: Joi.string().required()
 });
@@ -71,6 +80,7 @@ const userParamSchema = Joi.object({
 export {
   uploadSchema,
   emergencySchema,
+  emergencyFinalizeSchema,
   travelSchema,
   travelCheckpointSchema,
   idParamSchema,

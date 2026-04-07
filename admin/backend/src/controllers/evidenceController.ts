@@ -24,23 +24,48 @@ const emergency = asyncHandler(async (req, res) => {
     mode: req.body.mode || 'emergency'
   };
 
-  const result = await enqueueFileProcessing(payload);
-
-  if (result && typeof result.id !== 'undefined') {
-    res.status(202).json({
+  try {
+    const result = await evidenceService.ingestBatchSession(payload);
+    res.status(201).json({
       success: true,
-      message: 'Emergency batch accepted for processing',
-      data: {
-        jobId: result.id,
-        status: 'queued'
-      }
+      message: 'Emergency evidence processed',
+      data: result
     });
     return;
-  }
+  } catch (error) {
+    const queued = await enqueueFileProcessing(payload);
+    if (queued && typeof queued.id !== 'undefined') {
+      res.status(202).json({
+        success: true,
+        message: 'Emergency batch accepted for processing',
+        data: {
+          jobId: queued.id,
+          status: 'queued'
+        }
+      });
+      return;
+    }
 
-  res.status(201).json({
+    throw error;
+  }
+});
+
+const emergencyFinalize = asyncHandler(async (req, res) => {
+  const result = await evidenceService.ingestBatchSession({
+    files: [],
+    input: {
+      ...req.body,
+      mode: 'emergency',
+      type: 'emergency',
+      isFinal: true
+    },
+    user: req.user,
+    mode: 'emergency'
+  });
+
+  res.status(200).json({
     success: true,
-    message: 'Emergency evidence processed',
+    message: 'Emergency session finalized',
     data: result
   });
 });
@@ -131,6 +156,7 @@ const verifyEvidence = asyncHandler(async (req, res) => {
 export {
   upload,
   emergency,
+  emergencyFinalize,
   travel,
   travelCheckpoint,
   getEvidence,
@@ -141,6 +167,7 @@ export {
 export default {
   upload,
   emergency,
+  emergencyFinalize,
   travel,
   travelCheckpoint,
   getEvidence,

@@ -13,6 +13,7 @@ const commonValidators_1 = require("../validators/commonValidators");
 const router = express_1.default.Router();
 router.post('/upload', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.uploadSchema), evidenceController_1.default.upload);
 router.post('/emergency', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.emergencySchema), evidenceController_1.default.emergency);
+router.post('/emergency/finalize', authMiddleware_1.authenticateOptional, (0, validate_1.default)(evidenceValidators_1.emergencyFinalizeSchema), evidenceController_1.default.emergencyFinalize);
 router.post('/travel', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.travelSchema), evidenceController_1.default.travel);
 router.post('/travel/checkpoint', authMiddleware_1.authenticateOptional, (0, validate_1.default)(evidenceValidators_1.travelCheckpointSchema), evidenceController_1.default.travelCheckpoint);
 router.get('/user/:userId', authMiddleware_1.authenticateRequired, (0, validate_1.default)(evidenceValidators_1.userParamSchema, 'params'), (0, validate_1.default)(commonValidators_1.listQuerySchema, 'query'), evidenceController_1.default.listUserEvidence);

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyEvidence = exports.listUserEvidence = exports.getEvidence = exports.travelCheckpoint = exports.travel = exports.emergency = exports.upload = void 0;
+exports.verifyEvidence = exports.listUserEvidence = exports.getEvidence = exports.travelCheckpoint = exports.travel = exports.emergencyFinalize = exports.emergency = exports.upload = void 0;
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const evidenceService_1 = __importDefault(require("../services/evidenceService"));
 const queueService_1 = require("../services/queueService");
@@ -27,25 +27,51 @@ const emergency = (0, asyncHandler_1.default)(async (req, res) => {
         user: req.user,
         mode: req.body.mode || 'emergency'
     };
-    const result = await (0, queueService_1.enqueueFileProcessing)(payload);
-    if (result && typeof result.id !== 'undefined') {
-        res.status(202).json({
+    try {
+        const result = await evidenceService_1.default.ingestBatchSession(payload);
+        res.status(201).json({
             success: true,
-            message: 'Emergency batch accepted for processing',
-            data: {
-                jobId: result.id,
-                status: 'queued'
-            }
+            message: 'Emergency evidence processed',
+            data: result
         });
         return;
     }
-    res.status(201).json({
+    catch (error) {
+        const queued = await (0, queueService_1.enqueueFileProcessing)(payload);
+        if (queued && typeof queued.id !== 'undefined') {
+            res.status(202).json({
+                success: true,
+                message: 'Emergency batch accepted for processing',
+                data: {
+                    jobId: queued.id,
+                    status: 'queued'
+                }
+            });
+            return;
+        }
+        throw error;
+    }
+});
+exports.emergency = emergency;
+const emergencyFinalize = (0, asyncHandler_1.default)(async (req, res) => {
+    const result = await evidenceService_1.default.ingestBatchSession({
+        files: [],
+        input: {
+            ...req.body,
+            mode: 'emergency',
+            type: 'emergency',
+            isFinal: true
+        },
+        user: req.user,
+        mode: 'emergency'
+    });
+    res.status(200).json({
         success: true,
-        message: 'Emergency evidence processed',
+        message: 'Emergency session finalized',
         data: result
     });
 });
-exports.emergency = emergency;
+exports.emergencyFinalize = emergencyFinalize;
 const travel = (0, asyncHandler_1.default)(async (req, res) => {
     const payload = {
         files: req.files,
@@ -125,6 +151,7 @@ exports.verifyEvidence = verifyEvidence;
 exports.default = {
     upload,
     emergency,
+    emergencyFinalize,
     travel,
     travelCheckpoint,
     getEvidence,

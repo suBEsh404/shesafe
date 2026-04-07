@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userParamSchema = exports.idParamSchema = exports.travelCheckpointSchema = exports.travelSchema = exports.emergencySchema = exports.uploadSchema = void 0;
+exports.userParamSchema = exports.idParamSchema = exports.travelCheckpointSchema = exports.travelSchema = exports.emergencyFinalizeSchema = exports.emergencySchema = exports.uploadSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 const fileUploadCommon = {
     caseId: joi_1.default.string().min(1).max(120).required(),
@@ -64,6 +64,15 @@ const travelCheckpointSchema = joi_1.default.object({
     isFinal: joi_1.default.boolean().default(false)
 });
 exports.travelCheckpointSchema = travelCheckpointSchema;
+const emergencyFinalizeSchema = joi_1.default.object({
+    caseId: joi_1.default.string().min(1).max(120).required(),
+    sessionId: joi_1.default.string().min(8).max(120).required(),
+    type: joi_1.default.string().valid('emergency').default('emergency'),
+    mode: joi_1.default.string().valid('emergency').default('emergency'),
+    isFinal: joi_1.default.boolean().default(true),
+    metadata: joi_1.default.object().unknown(true).default({})
+});
+exports.emergencyFinalizeSchema = emergencyFinalizeSchema;
 const idParamSchema = joi_1.default.object({
     id: joi_1.default.string().required()
 });

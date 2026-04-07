@@ -253,12 +253,32 @@ async function uploadEvidence({ files, input, user }) {
 
 async function ingestBatchSession({ files, input, user, mode = 'emergency' }) {
   const normalizedFiles = normalizeFiles(files);
-  if (!normalizedFiles.length) {
-    throw new ApiError(400, 'At least one file is required for emergency or travel batching');
-  }
-
   const sessionId = input.sessionId || `session_${Date.now()}`;
   const caseId = input.caseId || sessionId;
+
+  if (!normalizedFiles.length) {
+    if (mode === 'emergency' && input?.isFinal) {
+      const session = await EmergencySession.findOne({ sessionId });
+      if (!session || !session.chunks?.length) {
+        throw new ApiError(400, 'No buffered emergency chunks found to finalize');
+      }
+
+      if (session.status === 'sealed') {
+        const evidence = await Evidence.findOne({ sessionId }).sort({ createdAt: -1 });
+        return {
+          status: 'sealed',
+          evidence: evidence ? toEvidenceResponse(evidence, { includeOwner: true }) : null,
+          sessionId,
+          chunkCount: session.chunks.length
+        };
+      }
+
+      session.lastActivityAt = new Date();
+    } else {
+      throw new ApiError(400, 'At least one file is required for emergency or travel batching');
+    }
+  }
+
   const session = await EmergencySession.findOneAndUpdate(
     { sessionId },
     {
@@ -333,7 +353,9 @@ async function ingestBatchSession({ files, input, user, mode = 'emergency' }) {
     });
   }
 
-  session.chunks.push(...uploadedChunks);
+  if (uploadedChunks.length) {
+    session.chunks.push(...uploadedChunks);
+  }
   session.lastActivityAt = new Date();
 
   const elapsedSeconds = (Date.now() - new Date(session.startedAt).getTime()) / 1000;
