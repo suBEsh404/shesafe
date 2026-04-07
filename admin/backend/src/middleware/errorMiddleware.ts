@@ -22,7 +22,7 @@ function errorHandler(error, req, res, next) {
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
-      details: Object.values(error.errors).map((item) => item.message)
+      details: Object.values(error.errors).map((item: any) => item.message)
     });
   }
 

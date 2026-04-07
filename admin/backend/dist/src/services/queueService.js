@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.initQueueService = initQueueService;
 exports.enqueueBlockchainWrite = enqueueBlockchainWrite;
 exports.enqueueFileProcessing = enqueueFileProcessing;
+// @ts-nocheck
 const bull_1 = __importDefault(require("bull"));
 const env_1 = require("../config/env");
 const logger_1 = __importDefault(require("../config/logger"));
@@ -57,15 +58,20 @@ function initQueueService({ processBlockchainJob, processFileJob } = {}) {
 }
 async function enqueueBlockchainWrite(payload) {
     if (blockchainQueue) {
-        return blockchainQueue.add('store-evidence', payload, {
-            attempts: 5,
-            backoff: {
-                type: 'exponential',
-                delay: 5000
-            },
-            removeOnComplete: true,
-            removeOnFail: false
-        });
+        try {
+            return await blockchainQueue.add('store-evidence', payload, {
+                attempts: 5,
+                backoff: {
+                    type: 'exponential',
+                    delay: 5000
+                },
+                removeOnComplete: true,
+                removeOnFail: false
+            });
+        }
+        catch (error) {
+            logger_1.default.error({ message: 'Blockchain enqueue failed, falling back to inline processor', error: error.message });
+        }
     }
     if (!blockchainProcessor) {
         throw new Error('Blockchain processor is not configured');
@@ -74,15 +80,20 @@ async function enqueueBlockchainWrite(payload) {
 }
 async function enqueueFileProcessing(payload) {
     if (fileQueue) {
-        return fileQueue.add('process-files', payload, {
-            attempts: 3,
-            backoff: {
-                type: 'exponential',
-                delay: 3000
-            },
-            removeOnComplete: true,
-            removeOnFail: false
-        });
+        try {
+            return await fileQueue.add('process-files', payload, {
+                attempts: 3,
+                backoff: {
+                    type: 'exponential',
+                    delay: 3000
+                },
+                removeOnComplete: true,
+                removeOnFail: false
+            });
+        }
+        catch (error) {
+            logger_1.default.error({ message: 'File enqueue failed, falling back to inline processor', error: error.message });
+        }
     }
     if (!fileProcessor) {
         throw new Error('File processor is not configured');

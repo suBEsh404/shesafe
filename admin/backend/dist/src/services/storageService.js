@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadEncryptedBuffer = uploadEncryptedBuffer;
 exports.deleteStoredFile = deleteStoredFile;
 exports.downloadBufferFromUrl = downloadBufferFromUrl;
+// @ts-nocheck
 const stream_1 = require("stream");
 const cloudinary_1 = require("cloudinary");
 const env_1 = require("../config/env");

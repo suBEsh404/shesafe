@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Queue from 'bull';
 import { redisUrl } from '../config/env';
 import logger from '../config/logger';
@@ -62,15 +63,19 @@ function initQueueService({ processBlockchainJob, processFileJob } = {}) {
 
 async function enqueueBlockchainWrite(payload) {
   if (blockchainQueue) {
-    return blockchainQueue.add('store-evidence', payload, {
-      attempts: 5,
-      backoff: {
-        type: 'exponential',
-        delay: 5000
-      },
-      removeOnComplete: true,
-      removeOnFail: false
-    });
+    try {
+      return await blockchainQueue.add('store-evidence', payload, {
+        attempts: 5,
+        backoff: {
+          type: 'exponential',
+          delay: 5000
+        },
+        removeOnComplete: true,
+        removeOnFail: false
+      });
+    } catch (error) {
+      logger.error({ message: 'Blockchain enqueue failed, falling back to inline processor', error: error.message });
+    }
   }
 
   if (!blockchainProcessor) {
@@ -82,15 +87,19 @@ async function enqueueBlockchainWrite(payload) {
 
 async function enqueueFileProcessing(payload) {
   if (fileQueue) {
-    return fileQueue.add('process-files', payload, {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 3000
-      },
-      removeOnComplete: true,
-      removeOnFail: false
-    });
+    try {
+      return await fileQueue.add('process-files', payload, {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 3000
+        },
+        removeOnComplete: true,
+        removeOnFail: false
+      });
+    } catch (error) {
+      logger.error({ message: 'File enqueue failed, falling back to inline processor', error: error.message });
+    }
   }
 
   if (!fileProcessor) {

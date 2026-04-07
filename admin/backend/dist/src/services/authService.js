@@ -70,6 +70,12 @@ async function loginUser({ email, password }) {
     if (!user) {
         throw new ApiError_1.default(401, 'Invalid credentials');
     }
+    if (user.status === 'suspended') {
+        throw new ApiError_1.default(403, 'Account is suspended. Please contact support.');
+    }
+    if (user.status === 'pending') {
+        throw new ApiError_1.default(403, 'Account approval is pending.');
+    }
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
         throw new ApiError_1.default(401, 'Invalid credentials');

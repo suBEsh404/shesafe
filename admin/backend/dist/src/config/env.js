@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.appBaseUrl = exports.travelBatchSeconds = exports.emergencyBatchSeconds = exports.rateLimitMax = exports.rateLimitWindowMs = exports.maxFileSizeBytes = exports.redisUrl = exports.blockchain = exports.ipfs = exports.useIpfs = exports.storageProvider = exports.cloudinary = exports.encryptionKey = exports.encryptFilesBeforeUpload = exports.refreshTokenExpiresIn = exports.accessTokenExpiresIn = exports.refreshTokenSecret = exports.accessTokenSecret = exports.mongoUri = exports.isDevelopment = exports.isProduction = exports.port = exports.env = void 0;
+exports.expoPushApiUrl = exports.expoPushEnabled = exports.appBaseUrl = exports.travelBatchSeconds = exports.emergencyBatchSeconds = exports.rateLimitMax = exports.rateLimitWindowMs = exports.maxFileSizeBytes = exports.redisUrl = exports.blockchain = exports.ipfs = exports.useIpfs = exports.storageProvider = exports.cloudinary = exports.encryptionKey = exports.encryptFilesBeforeUpload = exports.refreshTokenExpiresIn = exports.accessTokenExpiresIn = exports.refreshTokenSecret = exports.accessTokenSecret = exports.mongoUri = exports.isDevelopment = exports.isProduction = exports.port = exports.env = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const joi_1 = __importDefault(require("joi"));
 dotenv_1.default.config();
@@ -35,7 +35,9 @@ const schema = joi_1.default.object({
     RATE_LIMIT_MAX: joi_1.default.number().integer().min(1).default(200),
     EMERGENCY_BATCH_SECONDS: joi_1.default.number().integer().min(1).default(60),
     TRAVEL_BATCH_SECONDS: joi_1.default.number().integer().min(1).default(30),
-    APP_BASE_URL: joi_1.default.string().allow('').default('http://localhost:5000')
+    APP_BASE_URL: joi_1.default.string().allow('').default('http://localhost:5000'),
+    EXPO_PUSH_ENABLED: joi_1.default.boolean().truthy('true').truthy('1').falsy('false').falsy('0').default(true),
+    EXPO_PUSH_API_URL: joi_1.default.string().uri().default('https://exp.host/--/api/v2/push/send')
 }).unknown(true);
 const { value: env, error } = schema.validate(process.env, { abortEarly: false });
 exports.env = env;
@@ -114,3 +116,7 @@ const travelBatchSeconds = Number(env.TRAVEL_BATCH_SECONDS);
 exports.travelBatchSeconds = travelBatchSeconds;
 const appBaseUrl = env.APP_BASE_URL;
 exports.appBaseUrl = appBaseUrl;
+const expoPushEnabled = env.EXPO_PUSH_ENABLED;
+exports.expoPushEnabled = expoPushEnabled;
+const expoPushApiUrl = env.EXPO_PUSH_API_URL;
+exports.expoPushApiUrl = expoPushApiUrl;

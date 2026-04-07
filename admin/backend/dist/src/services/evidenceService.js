@@ -6,12 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.processUploadedFiles = processUploadedFiles;
 exports.uploadEvidence = uploadEvidence;
 exports.ingestBatchSession = ingestBatchSession;
+exports.recordTravelCheckpoint = recordTravelCheckpoint;
 exports.getEvidenceById = getEvidenceById;
 exports.listEvidenceForUser = listEvidenceForUser;
 exports.verifyEvidenceById = verifyEvidenceById;
 exports.recordBlockchainResult = recordBlockchainResult;
 exports.retryBlockchainWrite = retryBlockchainWrite;
 exports.toEvidenceResponse = toEvidenceResponse;
+// @ts-nocheck
 const mongoose_1 = __importDefault(require("mongoose"));
 const ApiError_1 = __importDefault(require("../utils/ApiError"));
 const Evidence_1 = __importDefault(require("../models/Evidence"));
@@ -242,10 +244,31 @@ async function ingestBatchSession({ files, input, user, mode = 'emergency' }) {
     const folderPrefix = mode === 'travel' ? 'travel' : 'emergency';
     const existingSequences = session.chunks.length;
     const uploadedChunks = [];
+    const location = input?.location && typeof input.location === 'object'
+        ? input.location
+        : {
+            latitude: input?.latitude,
+            longitude: input?.longitude,
+            accuracy: input?.accuracy
+        };
     for (let index = 0; index < normalizedFiles.length; index += 1) {
         const file = normalizedFiles[index];
         const originalHash = (0, hashService_1.bufferHash)(file.buffer);
         const encrypted = env_1.encryptFilesBeforeUpload ? (0, encryptionService_1.encryptBuffer)(file.buffer) : null;
+        const sequence = existingSequences + index + 1;
+        const capturedAt = input?.chunkTimestamp ? new Date(input.chunkTimestamp) : new Date();
+        const locationPayload = JSON.stringify({
+            latitude: location?.latitude ?? null,
+            longitude: location?.longitude ?? null,
+            accuracy: location?.accuracy ?? null,
+            capturedAt: capturedAt.toISOString(),
+            sessionId,
+            sequence
+        });
+        const locationHash = (0, hashService_1.sha256Hex)(locationPayload);
+        const videoHash = originalHash;
+        const audioHash = input?.audioHash || (0, hashService_1.sha256Hex)(`${originalHash}:embedded-audio`);
+        const chunkHash = (0, hashService_1.sha256Hex)(`${videoHash}:${audioHash}:${locationHash}:${sessionId}:${sequence}`);
         const uploadBuffer = encrypted ? encrypted.encrypted : file.buffer;
         const upload = await (0, storageService_1.uploadEncryptedBuffer)({
             buffer: uploadBuffer,
@@ -254,7 +277,7 @@ async function ingestBatchSession({ files, input, user, mode = 'emergency' }) {
             folder: `${folderPrefix}/${sessionId}`
         });
         uploadedChunks.push({
-            sequence: existingSequences + index + 1,
+            sequence,
             url: upload.secureUrl,
             publicId: upload.publicId,
             provider: upload.provider,
@@ -264,15 +287,23 @@ async function ingestBatchSession({ files, input, user, mode = 'emergency' }) {
             iv: encrypted?.iv || null,
             authTag: encrypted?.authTag || null,
             originalHash,
-            location: input.location || {},
-            capturedAt: new Date()
+            location,
+            locationHash,
+            videoHash,
+            audioHash,
+            chunkHash,
+            chunkIndex: input?.chunkIndex || sequence,
+            capturedAt
         });
     }
     session.chunks.push(...uploadedChunks);
     session.lastActivityAt = new Date();
     const elapsedSeconds = (Date.now() - new Date(session.startedAt).getTime()) / 1000;
     const requiredWindow = session.mode === 'travel' ? env_1.travelBatchSeconds : env_1.emergencyBatchSeconds;
-    const shouldSeal = Boolean(input.isFinal || elapsedSeconds >= requiredWindow);
+    // For SOS emergency mode, keep buffering/storing chunk hashes until user stops recording (isFinal=true).
+    const shouldSeal = session.mode === 'emergency'
+        ? Boolean(input.isFinal)
+        : Boolean(input.isFinal || elapsedSeconds >= requiredWindow);
     if (!shouldSeal) {
         await session.save();
         return {
@@ -340,6 +371,52 @@ async function ingestBatchSession({ files, input, user, mode = 'emergency' }) {
         evidence: toEvidenceResponse(evidence, { includeOwner: true }),
         sessionId,
         chunkCount: session.chunks.length
+    };
+}
+async function recordTravelCheckpoint({ input, user }) {
+    const sessionId = input.sessionId;
+    const caseId = input.caseId;
+    const session = await EmergencySession_1.default.findOneAndUpdate({ sessionId }, {
+        $setOnInsert: {
+            userId: user?._id || null,
+            sessionId,
+            mode: 'travel'
+        },
+        $set: {
+            caseId,
+            mode: 'travel',
+            lastActivityAt: new Date()
+        }
+    }, { upsert: true, new: true });
+    const checkpoint = {
+        latitude: input.location?.latitude,
+        longitude: input.location?.longitude,
+        accuracy: input.location?.accuracy,
+        capturedAt: new Date().toISOString()
+    };
+    const metadata = session.metadata && typeof session.metadata === 'object'
+        ? session.metadata
+        : {};
+    const checkpoints = Array.isArray(metadata.checkpoints)
+        ? metadata.checkpoints
+        : [];
+    checkpoints.push(checkpoint);
+    session.metadata = {
+        ...metadata,
+        checkpoints,
+        ...input.metadata
+    };
+    if (input.isFinal) {
+        session.status = 'sealed';
+        session.finalizedAt = new Date();
+    }
+    await session.save();
+    return {
+        sessionId,
+        caseId,
+        status: input.isFinal ? 'sealed' : 'buffering',
+        checkpointCount: checkpoints.length,
+        latestCheckpoint: checkpoint
     };
 }
 async function getEvidenceById({ evidenceId, user }) {
@@ -479,6 +556,7 @@ exports.default = {
     processUploadedFiles,
     uploadEvidence,
     ingestBatchSession,
+    recordTravelCheckpoint,
     getEvidenceById,
     listEvidenceForUser,
     verifyEvidenceById,

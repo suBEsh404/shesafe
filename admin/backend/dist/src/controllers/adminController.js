@@ -34,6 +34,7 @@ const inviteUser = (0, asyncHandler_1.default)(async (req, res) => {
     const result = await adminService_1.default.inviteUser({
         name: req.body.name,
         email: req.body.email,
+        password: req.body.password,
         role: req.body.role,
         invitedBy: req.user
     });

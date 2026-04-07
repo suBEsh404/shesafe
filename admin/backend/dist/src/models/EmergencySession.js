@@ -40,6 +40,26 @@ const emergencyChunkSchema = new mongoose_1.default.Schema({
         type: String,
         required: true
     },
+    locationHash: {
+        type: String,
+        default: null
+    },
+    videoHash: {
+        type: String,
+        default: null
+    },
+    audioHash: {
+        type: String,
+        default: null
+    },
+    chunkHash: {
+        type: String,
+        default: null
+    },
+    chunkIndex: {
+        type: Number,
+        default: null
+    },
     location: {
         latitude: Number,
         longitude: Number,

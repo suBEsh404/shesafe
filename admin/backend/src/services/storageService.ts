@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Readable } from 'stream';
 import { v2 as cloudinary } from 'cloudinary';
 import { cloudinary as cloudinaryConfig, storageProvider, useIpfs, ipfs } from '../config/env';

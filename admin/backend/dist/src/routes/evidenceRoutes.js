@@ -14,6 +14,7 @@ const router = express_1.default.Router();
 router.post('/upload', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.uploadSchema), evidenceController_1.default.upload);
 router.post('/emergency', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.emergencySchema), evidenceController_1.default.emergency);
 router.post('/travel', authMiddleware_1.authenticateOptional, upload_1.default.array('files', 20), (0, validate_1.default)(evidenceValidators_1.travelSchema), evidenceController_1.default.travel);
+router.post('/travel/checkpoint', authMiddleware_1.authenticateOptional, (0, validate_1.default)(evidenceValidators_1.travelCheckpointSchema), evidenceController_1.default.travelCheckpoint);
 router.get('/user/:userId', authMiddleware_1.authenticateRequired, (0, validate_1.default)(evidenceValidators_1.userParamSchema, 'params'), (0, validate_1.default)(commonValidators_1.listQuerySchema, 'query'), evidenceController_1.default.listUserEvidence);
 router.get('/:id', authMiddleware_1.authenticateRequired, (0, validate_1.default)(evidenceValidators_1.idParamSchema, 'params'), evidenceController_1.default.getEvidence);
 router.post('/verify/:id', authMiddleware_1.authenticateRequired, (0, validate_1.default)(evidenceValidators_1.idParamSchema, 'params'), evidenceController_1.default.verifyEvidence);

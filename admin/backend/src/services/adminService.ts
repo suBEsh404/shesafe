@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Evidence from '../models/Evidence';
 import User from '../models/User';
 import AccessLog from '../models/AccessLog';

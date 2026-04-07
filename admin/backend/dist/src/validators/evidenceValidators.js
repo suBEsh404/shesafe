@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userParamSchema = exports.idParamSchema = exports.travelSchema = exports.emergencySchema = exports.uploadSchema = void 0;
+exports.userParamSchema = exports.idParamSchema = exports.travelCheckpointSchema = exports.travelSchema = exports.emergencySchema = exports.uploadSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 const fileUploadCommon = {
     caseId: joi_1.default.string().min(1).max(120).required(),
@@ -22,6 +22,15 @@ const emergencySchema = joi_1.default.object({
     ...fileUploadCommon,
     sessionId: joi_1.default.string().min(8).max(120).optional(),
     mode: joi_1.default.string().valid('emergency', 'travel').default('emergency'),
+    latitude: joi_1.default.number().optional(),
+    longitude: joi_1.default.number().optional(),
+    accuracy: joi_1.default.number().optional(),
+    locationHash: joi_1.default.string().max(256).allow('', null),
+    videoHash: joi_1.default.string().max(256).allow('', null),
+    audioHash: joi_1.default.string().max(256).allow('', null),
+    chunkHash: joi_1.default.string().max(256).allow('', null),
+    chunkIndex: joi_1.default.number().integer().min(1).optional(),
+    chunkTimestamp: joi_1.default.date().iso().optional(),
     location: joi_1.default.object({
         latitude: joi_1.default.number().optional(),
         longitude: joi_1.default.number().optional(),
@@ -43,6 +52,18 @@ const travelSchema = joi_1.default.object({
     isFinal: joi_1.default.boolean().default(false)
 });
 exports.travelSchema = travelSchema;
+const travelCheckpointSchema = joi_1.default.object({
+    caseId: joi_1.default.string().min(1).max(120).required(),
+    sessionId: joi_1.default.string().min(8).max(120).required(),
+    location: joi_1.default.object({
+        latitude: joi_1.default.number().required(),
+        longitude: joi_1.default.number().required(),
+        accuracy: joi_1.default.number().optional()
+    }).required(),
+    metadata: joi_1.default.object().unknown(true).default({}),
+    isFinal: joi_1.default.boolean().default(false)
+});
+exports.travelCheckpointSchema = travelCheckpointSchema;
 const idParamSchema = joi_1.default.object({
     id: joi_1.default.string().required()
 });

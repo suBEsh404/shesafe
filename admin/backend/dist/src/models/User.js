@@ -58,6 +58,32 @@ const userSchema = new mongoose_1.default.Schema({
     invitedAt: {
         type: Date,
         default: null
+    },
+    expoPushTokens: {
+        type: [
+            {
+                token: {
+                    type: String,
+                    required: true,
+                    trim: true
+                },
+                deviceId: {
+                    type: String,
+                    default: null,
+                    trim: true
+                },
+                platform: {
+                    type: String,
+                    enum: ['ios', 'android', 'web', 'unknown'],
+                    default: 'unknown'
+                },
+                lastRegisteredAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
+        default: []
     }
 }, {
     timestamps: true

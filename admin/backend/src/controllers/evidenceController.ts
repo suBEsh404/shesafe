@@ -77,6 +77,19 @@ const travel = asyncHandler(async (req, res) => {
   });
 });
 
+const travelCheckpoint = asyncHandler(async (req, res) => {
+  const result = await evidenceService.recordTravelCheckpoint({
+    input: req.body,
+    user: req.user
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Travel checkpoint recorded',
+    data: result
+  });
+});
+
 const getEvidence = asyncHandler(async (req, res) => {
   const result = await evidenceService.getEvidenceById({
     evidenceId: req.params.id,
@@ -119,6 +132,7 @@ export {
   upload,
   emergency,
   travel,
+  travelCheckpoint,
   getEvidence,
   listUserEvidence,
   verifyEvidence
@@ -128,6 +142,7 @@ export default {
   upload,
   emergency,
   travel,
+  travelCheckpoint,
   getEvidence,
   listUserEvidence,
   verifyEvidence

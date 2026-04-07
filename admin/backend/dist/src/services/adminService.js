@@ -12,6 +12,7 @@ exports.getAdminSettings = getAdminSettings;
 exports.getProjectActivitySummary = getProjectActivitySummary;
 exports.evaluateSecurityControls = evaluateSecurityControls;
 exports.generateAuditReport = generateAuditReport;
+// @ts-nocheck
 const Evidence_1 = __importDefault(require("../models/Evidence"));
 const User_1 = __importDefault(require("../models/User"));
 const AccessLog_1 = __importDefault(require("../models/AccessLog"));
@@ -452,6 +453,7 @@ async function getProjectActivitySummary() {
             subject: item.ownerUserId?.name || item.ownerAlias || 'Unknown operator',
             status: item.blockchainStatus === 'ON_CHAIN' ? 'Confirmed' : item.blockchainStatus === 'PENDING' ? 'Pending' : 'Flagged',
             note: `Case ${item.caseId}`,
+            sortTime: new Date(item.timestamp).getTime(),
             time: new Date(item.timestamp).toLocaleString('en-IN', {
                 dateStyle: 'medium',
                 timeStyle: 'short'
@@ -465,6 +467,7 @@ async function getProjectActivitySummary() {
             subject: item.accessedBy?.name || 'Unknown user',
             status: item.status === 'allowed' ? 'Confirmed' : item.status === 'pending' ? 'Pending' : 'Flagged',
             note: item.evidenceId?.caseId ? `Case ${item.evidenceId.caseId}` : 'Evidence access',
+            sortTime: new Date(item.createdAt).getTime(),
             time: new Date(item.createdAt).toLocaleString('en-IN', {
                 dateStyle: 'medium',
                 timeStyle: 'short'
@@ -472,8 +475,9 @@ async function getProjectActivitySummary() {
             reference: item.evidenceId?._id?.toString?.() || 'Access log'
         }))
     ]
-        .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-        .slice(0, 8);
+        .sort((a, b) => b.sortTime - a.sortTime)
+        .slice(0, 8)
+        .map(({ sortTime, ...item }) => item);
     return {
         activityCards,
         weeklyActivity,

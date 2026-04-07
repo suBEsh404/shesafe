@@ -53,7 +53,8 @@ async function hasAccess(evidence, user, action = 'view') {
     if (!grant) {
         return false;
     }
-    return grant.permissions.includes(action);
+    const normalizedAction = action;
+    return grant.permissions.includes(normalizedAction);
 }
 async function grantAccess({ evidenceId, grantedTo, permissions, grantedBy, req }) {
     const evidence = await Evidence_1.default.findById(evidenceId);

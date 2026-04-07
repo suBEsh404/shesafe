@@ -31,7 +31,9 @@ const schema = Joi.object({
   RATE_LIMIT_MAX: Joi.number().integer().min(1).default(200),
   EMERGENCY_BATCH_SECONDS: Joi.number().integer().min(1).default(60),
   TRAVEL_BATCH_SECONDS: Joi.number().integer().min(1).default(30),
-  APP_BASE_URL: Joi.string().allow('').default('http://localhost:5000')
+  APP_BASE_URL: Joi.string().allow('').default('http://localhost:5000'),
+  EXPO_PUSH_ENABLED: Joi.boolean().truthy('true').truthy('1').falsy('false').falsy('0').default(true),
+  EXPO_PUSH_API_URL: Joi.string().uri().default('https://exp.host/--/api/v2/push/send')
 }).unknown(true);
 
 const { value: env, error } = schema.validate(process.env, { abortEarly: false });
@@ -95,6 +97,8 @@ const rateLimitMax = Number(env.RATE_LIMIT_MAX);
 const emergencyBatchSeconds = Number(env.EMERGENCY_BATCH_SECONDS);
 const travelBatchSeconds = Number(env.TRAVEL_BATCH_SECONDS);
 const appBaseUrl = env.APP_BASE_URL;
+const expoPushEnabled = env.EXPO_PUSH_ENABLED;
+const expoPushApiUrl = env.EXPO_PUSH_API_URL;
 
 export {
   env,
@@ -119,6 +123,8 @@ export {
   rateLimitMax,
   emergencyBatchSeconds,
   travelBatchSeconds,
-  appBaseUrl
+  appBaseUrl,
+  expoPushEnabled,
+  expoPushApiUrl
 };
 

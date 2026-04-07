@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyEvidence = exports.listUserEvidence = exports.getEvidence = exports.travel = exports.emergency = exports.upload = void 0;
+exports.verifyEvidence = exports.listUserEvidence = exports.getEvidence = exports.travelCheckpoint = exports.travel = exports.emergency = exports.upload = void 0;
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 const evidenceService_1 = __importDefault(require("../services/evidenceService"));
 const queueService_1 = require("../services/queueService");
@@ -75,6 +75,18 @@ const travel = (0, asyncHandler_1.default)(async (req, res) => {
     });
 });
 exports.travel = travel;
+const travelCheckpoint = (0, asyncHandler_1.default)(async (req, res) => {
+    const result = await evidenceService_1.default.recordTravelCheckpoint({
+        input: req.body,
+        user: req.user
+    });
+    res.status(200).json({
+        success: true,
+        message: 'Travel checkpoint recorded',
+        data: result
+    });
+});
+exports.travelCheckpoint = travelCheckpoint;
 const getEvidence = (0, asyncHandler_1.default)(async (req, res) => {
     const result = await evidenceService_1.default.getEvidenceById({
         evidenceId: req.params.id,
@@ -114,6 +126,7 @@ exports.default = {
     upload,
     emergency,
     travel,
+    travelCheckpoint,
     getEvidence,
     listUserEvidence,
     verifyEvidence

@@ -54,7 +54,8 @@ async function hasAccess(evidence, user, action = 'view') {
     return false;
   }
 
-  return grant.permissions.includes(action);
+  const normalizedAction = action as 'view' | 'download' | 'share';
+  return grant.permissions.includes(normalizedAction);
 }
 
 async function grantAccess({ evidenceId, grantedTo, permissions, grantedBy, req }) {
